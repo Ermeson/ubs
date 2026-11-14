@@ -125,7 +125,7 @@
         .confetti-piece {
             position: absolute;
             left: 50%;
-            top: 36%;
+            top: 50%;
             width: 10px;
             height: 14px;
             border-radius: 3px;
@@ -158,6 +158,11 @@
     <div id="app" v-cloak class="min-h-screen px-4 py-5 sm:px-6 sm:py-8">
         <main class="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-xl flex-col sm:min-h-[calc(100vh-4rem)]">
             <section class="my-auto w-full py-10" aria-live="polite">
+                <div v-if="confettiVisible" :key="confettiBurstKey"
+                    class="pointer-events-none fixed inset-0 z-50 overflow-hidden" aria-hidden="true">
+                    <span v-for="(piece, index) in confetti" :key="index" class="confetti-piece"
+                        :style="{ '--confetti-x': piece.x, '--confetti-y': piece.y, '--confetti-rotation': piece.rotation, animationDelay: piece.delay, animationDuration: piece.duration, backgroundColor: piece.color }"></span>
+                </div>
                 <div class="mb-7 text-center">
                     <p class="mb-2 text-base font-bold text-leaf-600">{{ complete ? 'Obrigado por participar!' :
                         'Queremos cuidar cada vez melhor' }}</p>
@@ -237,10 +242,6 @@
 
                 <div v-else
                     class="relative overflow-hidden rounded-[1.75rem] bg-white p-8 text-center shadow-[0_18px_55px_-28px_rgba(87,45,150,.28)] ring-1 ring-violet-200/80 sm:p-10">
-                    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-                        <span v-for="(piece, index) in confetti" :key="index" class="confetti-piece"
-                            :style="{ '--confetti-x': piece.x, '--confetti-y': piece.y, '--confetti-rotation': piece.rotation, animationDelay: piece.delay, animationDuration: piece.duration, backgroundColor: piece.color }"></span>
-                    </div>
                     <div class="relative z-10">
                         <p class="text-5xl" aria-hidden="true">🌼</p>
                         <p class="mt-5 text-base leading-7 text-violet-700/75">Esta é uma prévia da experiência. Nenhuma
@@ -294,6 +295,9 @@
                     currentIndex: 0,
                     answers: Array(10).fill(null),
                     complete: false,
+                    confettiVisible: false,
+                    confettiBurstKey: 0,
+                    confettiTimer: null,
                     confetti: Array.from({ length: 32 }, (_, index) => {
                         const angle = (index / 32) * Math.PI * 2;
                         const distance = 85 + (index % 4) * 20;
@@ -373,6 +377,21 @@
             methods: {
                 selectOption(index) {
                     this.answers[this.currentIndex] = index;
+                    if (this.currentQuestion.options[index].label === "Ótimo") {
+                        this.launchConfetti();
+                    }
+                },
+                launchConfetti() {
+                    window.clearTimeout(this.confettiTimer);
+                    this.confettiBurstKey += 1;
+                    this.confettiVisible = true;
+                    const burstKey = this.confettiBurstKey;
+                    this.confettiTimer = window.setTimeout(() => {
+                        if (this.confettiBurstKey === burstKey) {
+                            this.confettiVisible = false;
+                            this.confettiTimer = null;
+                        }
+                    }, 1700);
                 },
                 nextQuestion() {
                     if (this.answers[this.currentIndex] === null) return;
@@ -380,9 +399,13 @@
                         this.currentIndex += 1;
                     } else {
                         this.complete = true;
+                        this.launchConfetti();
                     }
                 },
                 restart() {
+                    window.clearTimeout(this.confettiTimer);
+                    this.confettiVisible = false;
+                    this.confettiTimer = null;
                     this.currentIndex = 0;
                     this.answers = Array(this.questions.length).fill(null);
                     this.complete = false;
