@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Conte para a gente como foi sua experiência na unidade de saúde." />
     <meta name="theme-color" content="#f7f2ff" />
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%23703db8'/%3E%3Cpath d='M16 19h.1M32 19h.1M15 28c2.2 5 5.2 7.5 9 7.5s6.8-2.5 9-7.5' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E" />
     <title>Sua opinião faz bem — UBS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -187,11 +189,12 @@
                     <div :key="currentIndex" class="question-panel">
                         <h2 class="mb-7 text-center text-2xl font-extrabold leading-tight sm:text-3xl">{{
                             currentQuestion.title }}</h2>
-                        <div v-if="currentQuestion.type === 'rating'" class="grid grid-cols-5 gap-2 sm:gap-3"
+                        <div v-if="currentQuestion.type === 'rating'" class="grid grid-cols-6 gap-3 sm:grid-cols-5"
                             role="radiogroup" :aria-label="currentQuestion.title">
                             <button v-for="(option, index) in currentQuestion.options" :key="option.label" type="button"
                                 role="radio" :aria-checked="answers[currentIndex] === index" :aria-label="option.label"
-                                class="choice-card flex min-h-28 flex-col items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white px-1 py-3 text-center sm:min-h-32 sm:rounded-3xl"
+                                class="choice-card col-span-2 flex min-h-28 flex-col items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white px-1 py-3 text-center sm:col-span-1 sm:min-h-32 sm:rounded-3xl"
+                                :class="{ 'col-start-2 sm:col-start-auto': index === 3, 'col-start-4 sm:col-start-auto': index === 4 }"
                                 @click="selectOption(index)">
                                 <svg viewBox="0 0 48 48" class="choice-face h-12 w-12 sm:h-14 sm:w-14"
                                     aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
