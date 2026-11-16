@@ -155,6 +155,21 @@
 </head>
 
 <body class="min-h-screen font-sans text-lg text-ink antialiased">
+    <!-- Formulário estático oculto apenas para o Netlify detectar os campos no build. O envio real é feito via fetch no Vue. -->
+    <form name="pesquisa-satisfacao" data-netlify="true" netlify-honeypot="bot-field" hidden>
+        <input type="text" name="recepcao" />
+        <input type="text" name="atendimento_ubs" />
+        <input type="text" name="tempo_espera" />
+        <input type="text" name="estrutura_fisica" />
+        <input type="text" name="equipe_enfermagem" />
+        <input type="text" name="equipe_medica" />
+        <input type="text" name="equipe_odontologica" />
+        <input type="text" name="motivo_visita" />
+        <input type="text" name="recomendaria" />
+        <input type="text" name="sugestao_melhoria" />
+        <input type="text" name="bot-field" />
+    </form>
+
     <div id="app" v-cloak class="min-h-screen px-4 py-5 sm:px-6 sm:py-8">
         <main class="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-xl flex-col sm:min-h-[calc(100vh-4rem)]">
             <section class="my-auto w-full py-10" aria-live="polite">
@@ -221,31 +236,32 @@
                         </div>
                     </div>
 
-                    <button type="button" :disabled="!hasAnswer"
+                    <button type="button" :disabled="!hasAnswer || submitting"
                         class="mt-8 flex min-h-16 w-full items-center justify-center gap-3 rounded-2xl bg-leaf-600 px-6 py-4 text-lg font-extrabold text-white shadow-[0_9px_22px_-8px_rgba(87,45,150,.58)] transition hover:bg-leaf-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-leaf-500 disabled:cursor-not-allowed disabled:bg-violet-100 disabled:text-violet-400 disabled:shadow-none"
                         @click="nextQuestion">
-                        {{ currentIndex === questions.length - 1 ? 'Enviar respostas' : 'Próxima pergunta' }}
+                        {{ currentIndex === questions.length - 1 ? (submitting ? 'Enviando...' : 'Enviar respostas') : 'Próxima pergunta' }}
                         <svg v-if="currentIndex < questions.length - 1" viewBox="0 0 20 20" fill="none" class="h-6 w-6"
                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                             <path d="M4.167 10h11.666m0 0L10 4.167M15.833 10 10 15.833" stroke="currentColor"
                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <svg v-else viewBox="0 0 20 20" fill="none" class="h-6 w-6" aria-hidden="true"
+                        <svg v-else-if="!submitting" viewBox="0 0 20 20" fill="none" class="h-6 w-6" aria-hidden="true"
                             xmlns="http://www.w3.org/2000/svg">
                             <path d="m4.167 10.417 3.75 3.75 7.916-8.334" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                     </button>
-                    <p class="mt-5 text-center text-sm leading-6 text-violet-500">Prévia interativa: suas respostas não
-                        são enviadas nem armazenadas.</p>
+                    <p v-if="submitError" class="mt-5 text-center text-sm font-semibold leading-6 text-red-500">Não
+                        conseguimos enviar suas respostas. Verifique sua conexão e toque em "Enviar respostas"
+                        novamente.</p>
                 </div>
 
                 <div v-else
                     class="relative overflow-hidden rounded-[1.75rem] bg-white p-8 text-center shadow-[0_18px_55px_-28px_rgba(87,45,150,.28)] ring-1 ring-violet-200/80 sm:p-10">
                     <div class="relative z-10">
                         <p class="text-5xl" aria-hidden="true">🌼</p>
-                        <p class="mt-5 text-base leading-7 text-violet-700/75">Esta é uma prévia da experiência. Nenhuma
-                            resposta foi enviada.</p>
+                        <p class="mt-5 text-base leading-7 text-violet-700/75">Suas respostas foram enviadas com
+                            sucesso.</p>
                         <button type="button"
                             class="mt-7 rounded-xl px-6 py-4 text-base font-extrabold text-leaf-700 transition hover:bg-leaf-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-leaf-500"
                             @click="restart">Responder novamente</button>
@@ -295,6 +311,20 @@
                     currentIndex: 0,
                     answers: Array(10).fill(null),
                     complete: false,
+                    submitting: false,
+                    submitError: false,
+                    fieldNames: [
+                        "recepcao",
+                        "atendimento_ubs",
+                        "tempo_espera",
+                        "estrutura_fisica",
+                        "equipe_enfermagem",
+                        "equipe_medica",
+                        "equipe_odontologica",
+                        "motivo_visita",
+                        "recomendaria",
+                        "sugestao_melhoria",
+                    ],
                     confettiVisible: false,
                     confettiBurstKey: 0,
                     confettiTimer: null,
@@ -398,8 +428,36 @@
                     if (this.currentIndex < this.questions.length - 1) {
                         this.currentIndex += 1;
                     } else {
+                        this.submitResponses();
+                    }
+                },
+                encodeFormData(data) {
+                    return Object.keys(data)
+                        .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`)
+                        .join("&");
+                },
+                async submitResponses() {
+                    this.submitting = true;
+                    this.submitError = false;
+                    const payload = { "form-name": "pesquisa-satisfacao" };
+                    this.questions.forEach((question, index) => {
+                        const answer = this.answers[index];
+                        payload[this.fieldNames[index]] =
+                            question.type === "rating" ? question.options[answer].label : answer;
+                    });
+                    try {
+                        const response = await fetch("/", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                            body: this.encodeFormData(payload),
+                        });
+                        if (!response.ok) throw new Error("submission failed");
                         this.complete = true;
                         this.launchConfetti();
+                    } catch (error) {
+                        this.submitError = true;
+                    } finally {
+                        this.submitting = false;
                     }
                 },
                 restart() {
@@ -409,6 +467,7 @@
                     this.currentIndex = 0;
                     this.answers = Array(this.questions.length).fill(null);
                     this.complete = false;
+                    this.submitError = false;
                 },
             },
         }).mount("#app");
