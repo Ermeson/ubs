@@ -475,19 +475,16 @@
     </script>
 
     <script>
-        const hideNetlifyBadge = () => {
-            document.querySelectorAll('a[href*="netlify.com"]').forEach((link) => {
-                if (/powered by netlify/i.test(link.textContent)) {
-                    link.style.display = "none";
-                }
-            });
-        };
+        function ocultarBadgeNetlify() {
+  document.getElementById("nl-badge-frame")?.remove();
+}
 
-        hideNetlifyBadge();
-        new MutationObserver(hideNetlifyBadge).observe(document.body, {
-            childList: true,
-            subtree: true,
-        });
+ocultarBadgeNetlify();
+
+new MutationObserver(ocultarBadgeNetlify).observe(document.documentElement, {
+  childList: true,
+  subtree: true,
+});
     </script>
 </body>
 
