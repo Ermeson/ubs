@@ -278,6 +278,8 @@
 
     <script>
         const { createApp } = Vue;
+        // Cole aqui a URL de implantação (termina em /exec) do Web App do Google Apps Script.
+        const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwfOfiWF6jRYm5LBuSPEp6mqA0GVaURFBxMX1xZpUZvl0wqrpwSQ_UnvniRIfdsT30zcg/exec";
 
         createApp({
             data() {
@@ -446,11 +448,13 @@
                         payload[this.fieldNames[index]] =
                             question.type === "rating" ? question.options[answer].label : answer;
                     });
+                    const encodedPayload = this.encodeFormData(payload);
+                    this.sendToGoogleSheets(encodedPayload);
                     try {
                         const response = await fetch("/", {
                             method: "POST",
                             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                            body: this.encodeFormData(payload),
+                            body: encodedPayload,
                         });
                         if (!response.ok) throw new Error("submission failed");
                         this.complete = true;
@@ -460,6 +464,15 @@
                     } finally {
                         this.submitting = false;
                     }
+                },
+                sendToGoogleSheets(encodedPayload) {
+                    if (!GOOGLE_SHEETS_WEBHOOK_URL.startsWith("https://")) return;
+                    fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: encodedPayload,
+                    }).catch(() => {});
                 },
                 restart() {
                     window.clearTimeout(this.confettiTimer);
