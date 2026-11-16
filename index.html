@@ -156,7 +156,7 @@
 
 <body class="min-h-screen font-sans text-lg text-ink antialiased">
     <!-- Formulário estático oculto apenas para o Netlify detectar os campos no build. O envio real é feito via fetch no Vue. -->
-    <form name="pesquisa-satisfacao" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <form name="pesquisa-satisfacao" data-netlify="true" netlify-honeypot="bot-field" hidden netlify>
         <input type="text" name="recepcao" />
         <input type="text" name="atendimento_ubs" />
         <input type="text" name="tempo_espera" />
@@ -185,7 +185,8 @@
                         {{ complete ? 'Sua voz ajuda a gente a crescer.' : 'Como foi sua experiência?' }}
                     </h1>
                     <p class="mx-auto mt-3 max-w-sm text-base leading-7 text-violet-700/75 sm:text-lg">
-                        {{ complete ? 'Obrigado por compartilhar sua experiência com a gente.' : 'Responda algumas perguntas rápidas para ajudar a melhorar nosso atendimento.' }}
+                        {{ complete ? 'Obrigado por compartilhar sua experiência com a gente.' : 'Responda algumas
+                        perguntas rápidas para ajudar a melhorar nosso atendimento.' }}
                     </p>
                 </div>
 
@@ -239,7 +240,8 @@
                     <button type="button" :disabled="!hasAnswer || submitting"
                         class="mt-8 flex min-h-16 w-full items-center justify-center gap-3 rounded-2xl bg-leaf-600 px-6 py-4 text-lg font-extrabold text-white shadow-[0_9px_22px_-8px_rgba(87,45,150,.58)] transition hover:bg-leaf-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-leaf-500 disabled:cursor-not-allowed disabled:bg-violet-100 disabled:text-violet-400 disabled:shadow-none"
                         @click="nextQuestion">
-                        {{ currentIndex === questions.length - 1 ? (submitting ? 'Enviando...' : 'Enviar respostas') : 'Próxima pergunta' }}
+                        {{ currentIndex === questions.length - 1 ? (submitting ? 'Enviando...' : 'Enviar respostas') :
+                        'Próxima pergunta' }}
                         <svg v-if="currentIndex < questions.length - 1" viewBox="0 0 20 20" fill="none" class="h-6 w-6"
                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                             <path d="M4.167 10h11.666m0 0L10 4.167M15.833 10 10 15.833" stroke="currentColor"
